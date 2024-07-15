@@ -14,13 +14,18 @@ You can use symlinks or submodules.
 
 ```typescript
 import { z } from "zod";
-import { postFunction, getFunction, patchFunction } from "@zgok-api/zgok-core";
+import {
+  postFunction,
+  getFunction,
+  patchFunction,
+  zgokDate,
+} from "@zgok-api/zgok-core";
 
 export const SampleSchema = {
   dir1: {
     hoge1: postFunction({
       req: z.object({ id: z.number() }),
-      res: z.object({ name1: z.string() }),
+      res: z.object({ name1: z.string(), date1: zgokDate() }),
     }),
     hoge2: getFunction({
       req: z.object({ id: z.number() }),

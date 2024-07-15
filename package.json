@@ -1,7 +1,7 @@
 {
   "name": "@zgok-api/zgok-express",
   "description": "This is the Express module for zod-api. zgok-api is an API developed in TypeScript for both front-end and back-end, ensuring safe request and response code through schema definitions using zod.",
-  "version": "0.0.9",
+  "version": "0.0.10",
   "main": "lib/index.js",
   "scripts": {
     "build": "tsc",
@@ -9,7 +9,7 @@
     "test": "jest"
   },
   "dependencies": {
-    "@zgok-api/zgok-core": "^0.0.15",
+    "@zgok-api/zgok-core": "^0.0.16",
     "express": "^4"
   },
   "devDependencies": {
@@ -20,6 +20,10 @@
     "supertest": "^7.0.0",
     "ts-jest": "^29.1.2",
     "typescript": "^5"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/hirao-combine/zgok-express.git"
   },
   "author": "hirao-combine",
   "license": "MIT"
