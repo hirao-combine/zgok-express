@@ -110,7 +110,7 @@ function execCallback(
       .then((callbackRes: any) => {
         const parseResponse = config.res.safeParse(callbackRes);
         if (parseResponse.success) {
-          res.send(callbackRes);
+          res.send(parseResponse.data);
         } else {
           next(
             new ZgokResponseValidationError(

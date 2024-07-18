@@ -1,7 +1,7 @@
 {
   "name": "@zgok-api/zgok-express",
   "description": "This is the Express module for zod-api. zgok-api is an API developed in TypeScript for both front-end and back-end, ensuring safe request and response code through schema definitions using zod.",
-  "version": "0.0.10",
+  "version": "0.0.11",
   "main": "lib/index.js",
   "scripts": {
     "build": "tsc",
