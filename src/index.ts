@@ -1,37 +1,33 @@
 import { ZgokConfig, ZgokMethod } from "@zgok-api/zgok-core";
 import express from "express";
+import type { ZodError } from "zod";
 
 export class ZgokRequestValidationError extends Error {
+  readonly status = 400;
   constructor(
-    // @ts-ignore
-    private namespace: string,
-    // @ts-ignore
-    private key: string,
-    // @ts-ignore
-    private body: any,
-    /** ZodError */
-    // @ts-ignore
-    private error: Error
+    public readonly namespace: string,
+    public readonly key: string,
+    /** 検証対象のリクエストボディ（GET/DELETE の場合はクエリ q の文字列） */
+    public readonly body: any,
+    /** ZodError。GET/DELETE のクエリ q が不正な JSON の場合は SyntaxError */
+    public readonly error: ZodError | SyntaxError
   ) {
-    super();
+    super(`${namespace}/${key} request validation failed`);
+    this.name = "ZgokRequestValidationError";
   }
-  status = 400;
 }
 export class ZgokResponseValidationError extends Error {
+  readonly status = 500;
   constructor(
-    // @ts-ignore
-    private namespace: string,
-    // @ts-ignore
-    private key: string,
-    // @ts-ignore
-    private body: any,
-    /** ZodError */
-    // @ts-ignore
-    private error: Error
+    public readonly namespace: string,
+    public readonly key: string,
+    /** 検証対象のレスポンスボディ */
+    public readonly body: any,
+    public readonly error: ZodError
   ) {
-    super();
+    super(`${namespace}/${key} response validation failed`);
+    this.name = "ZgokResponseValidationError";
   }
-  status = 500;
 }
 
 // ミドルウェアを作成する
@@ -94,10 +90,22 @@ function execCallback(
   callback: any
 ) {
   return (req: any, res: express.Response, next: any) => {
-    const body =
-      config.method == "get" || config.method == "delete"
-        ? JSON.parse(req.query.q || "{}")
-        : req.body || {};
+    let body: any;
+    if (config.method == "get" || config.method == "delete") {
+      // GET/DELETE はクエリ q に JSON 文字列でボディを受け取る
+      const q = req.query.q;
+      try {
+        if (q === undefined) body = {};
+        else if (typeof q !== "string")
+          throw new SyntaxError("query parameter q must be a string");
+        else body = JSON.parse(q);
+      } catch (e) {
+        next(new ZgokRequestValidationError(namespace, key, q, e as SyntaxError));
+        return;
+      }
+    } else {
+      body = req.body || {};
+    }
     const parseResult = config.req.safeParse(body);
     if (!parseResult.success) {
       next(
@@ -106,7 +114,9 @@ function execCallback(
       return;
     }
     req.zbody = parseResult.data;
-    callback(req, res)
+    // callback が同期的に throw しても catch(next) に乗せる
+    Promise.resolve()
+      .then(() => callback(req, res))
       .then((callbackRes: any) => {
         const parseResponse = config.res.safeParse(callbackRes);
         if (parseResponse.success) {
