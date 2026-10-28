@@ -37,6 +37,10 @@ export const SampleSchema = {
       req: z.object({ key: z.string() }),
       res: z.object({ kind: z.object({ name: z.string() }) }),
     }),
+    // req can be omitted when the endpoint takes no input
+    list: getFunction({
+      res: z.array(z.object({ id: z.number() })),
+    }),
   },
 };
 ```
@@ -64,6 +68,12 @@ router.use(
   zgokExpress.dir1.hoge1(async (req, res) => {
     console.log("hoge3 zbody", req.zbody);
     return { name3: `${req.zbody.id}さん` };
+  })
+);
+// no req schema -> req.zbody is undefined
+router.use(
+  zgokExpress.dir2.list(async () => {
+    return [{ id: 1 }, { id: 2 }];
   })
 );
 app.use("/api", router);

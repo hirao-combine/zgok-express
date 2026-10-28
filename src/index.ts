@@ -90,6 +90,12 @@ function execCallback(
   callback: any
 ) {
   return (req: any, res: express.Response, next: any) => {
+    // req スキーマが無い API はボディ・クエリを見ない
+    if (!config.req) {
+      req.zbody = undefined;
+      runCallback(config, namespace, key, callback, req, res, next);
+      return;
+    }
     let body: any;
     if (config.method == "get" || config.method == "delete") {
       // GET/DELETE はクエリ q に JSON 文字列でボディを受け取る
@@ -114,24 +120,36 @@ function execCallback(
       return;
     }
     req.zbody = parseResult.data;
-    // callback が同期的に throw しても catch(next) に乗せる
-    Promise.resolve()
-      .then(() => callback(req, res))
-      .then((callbackRes: any) => {
-        const parseResponse = config.res.safeParse(callbackRes);
-        if (parseResponse.success) {
-          res.send(parseResponse.data);
-        } else {
-          next(
-            new ZgokResponseValidationError(
-              namespace,
-              key,
-              callbackRes,
-              parseResponse.error
-            )
-          );
-        }
-      })
-      .catch(next);
+    runCallback(config, namespace, key, callback, req, res, next);
   };
+}
+
+function runCallback(
+  config: any,
+  namespace: string,
+  key: string,
+  callback: any,
+  req: any,
+  res: express.Response,
+  next: any
+) {
+  // callback が同期的に throw しても catch(next) に乗せる
+  Promise.resolve()
+    .then(() => callback(req, res))
+    .then((callbackRes: any) => {
+      const parseResponse = config.res.safeParse(callbackRes);
+      if (parseResponse.success) {
+        res.send(parseResponse.data);
+      } else {
+        next(
+          new ZgokResponseValidationError(
+            namespace,
+            key,
+            callbackRes,
+            parseResponse.error
+          )
+        );
+      }
+    })
+    .catch(next);
 }
