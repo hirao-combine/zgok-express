@@ -14,7 +14,7 @@
     "test": "jest"
   },
   "dependencies": {
-    "@zgok-api/zgok-core": "^0.0.17"
+    "@zgok-api/zgok-core": "^0.1.0"
   },
   "peerDependencies": {
     "express": "^4",
